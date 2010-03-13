@@ -34,7 +34,7 @@ def printEnt(vol_ptr, entry_ptr, file_path, sect):
         print " %06ld "%(entry.sector,),
 
     if len(file_path)>0:
-        print " %s/"%(path,),
+        print " %s/"%(file_path,),
     else:
         print " ",
     if entry.type==ST_DIR:

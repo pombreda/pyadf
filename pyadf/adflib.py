@@ -1,7 +1,7 @@
 '''Wrapper for adflib.h
 
 Generated with:
-D:\documents\drive_f_share\python\ctypesgen\ctypesgen.py -l adflib -o adflib.py adflib.h --save-preprocessed-headers=mytmp.h -a
+D:\documents\drive_f_share\python\ctypesgen\ctypesgen.py -a --cpp=J:\MinGW\bin\gcc.exe -E -l adflib -o adflib.py adflib.h --save-preprocessed-headers=mytmp.h
 
 Do not modify this file.
 '''
