@@ -5,7 +5,7 @@
 
 import os
 
-from adflib import *
+import adflib
 
 class AdfBaseException(Exception):
     '''Base ADF I/O exception'''
@@ -19,16 +19,14 @@ adflib_init = False
 def adf_setup():
     global adflib_init
     if not adflib_init:
-        adfEnvInitDefault()
+        adflib.adfEnvInitDefault()
         adflib_init = True
 
 def adf_cleanup():
     global adflib_init
     if not adflib_init:
-        adfEnvCleanUp()
+        adflib.adfEnvCleanUp()
         adflib_init = False
-
-Entry_Ptr = POINTER(Entry)
 
 
 class AdfFileInfo(object):
@@ -55,7 +53,7 @@ def process_entry(vol_ptr, entry_ptr, file_path):
     vol = vol_ptr[0]
     entry = entry_ptr[0]
     # do not print the links entries, ADFlib do not support them yet properly
-    if entry.type==ST_LFILE or entry.type==ST_LDIR or entry.type==ST_LSOFT:
+    if entry.type==adflib.ST_LFILE or entry.type==adflib.ST_LDIR or entry.type==adflib.ST_LSOFT:
         return
     
     tmp_comment = None
@@ -88,38 +86,39 @@ class Adf(object):
             # kinda hokey, go back to parentdir at end
             for tmpdir in dirname.split('/'):
                 if tmpdir:
-                    adfChangeDir(vol, tmpdir)
+                    adflib.adfChangeDir(vol, tmpdir)
             #raise NotImplementedError('directory names not support')
         result = []
-        list = adfGetDirEnt(vol, vol[0].curDirPtr)
+        Entry_Ptr = adflib.POINTER(adflib.Entry)
+        list = adflib.adfGetDirEnt(vol, vol[0].curDirPtr)
         cell = list 
         while cell:
             tmp_content = cell[0].content
-            tmp_content = cast(tmp_content, Entry_Ptr)
+            tmp_content = adflib.cast(tmp_content, Entry_Ptr)
             fentry = process_entry(vol, tmp_content, "")
             if fentry:
                 result.append(fentry)
             cell = cell[0].next
         
-        adfFreeDirList(list)
+        adflib.adfFreeDirList(list)
         if dirname:
-            adfToRootDir(vol)
+            adflib.adfToRootDir(vol)
         return result
     
     def open(self):
         ## not sure about name
         adf_setup()
         if not self.dev:
-            self.dev = adfMountDev(self.adf_filename, True)
+            self.dev = adflib.adfMountDev(self.adf_filename, True)
         if not self.vol:
-            self.vol = adfMount(self.dev, self.volnum, True)
+            self.vol = adflib.adfMount(self.dev, self.volnum, True)
 
     def close(self):
         ## not sure about name
         if self.vol:
-            adfUnMount(self.vol)
+            adflib.adfUnMount(self.vol)
         if self.dev:
-            adfUnMountDev(self.dev)
+            adflib.adfUnMountDev(self.dev)
 
         adf_cleanup()
     
