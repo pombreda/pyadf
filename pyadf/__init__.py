@@ -76,18 +76,32 @@ class Adf(object):
         self.dev = None
         self.volnum = volnum
         
-        self._curdir = None
+        self._curdir = '/'
         
         self.open()  # kinda nasty doing work in the constructor....
+    
+    def chdir(self, dirname):
+        vol = self.vol
+        self._chdir(dirname)
+        
+    def _chdir(self, dirname, update_curdir=True):
+        vol = self.vol
+        dirname = dirname.replace('\\', '/')  # Allow Windows style paths (just in case they slip in)
+        if dirname in ['/', ':']:
+            adflib.adfToRootDir(vol)
+            if update_curdir:
+                self._curdir = '/'
+        else:
+            for tmpdir in dirname.split('/'):
+                if tmpdir:
+                    adflib.adfChangeDir(vol, tmpdir)
+            if update_curdir:
+                self._curdir = dirname
     
     def ls_dir(self, dirname=None):
         vol = self.vol
         if dirname:
-            # kinda hokey, go back to parentdir at end
-            for tmpdir in dirname.split('/'):
-                if tmpdir:
-                    adflib.adfChangeDir(vol, tmpdir)
-            #raise NotImplementedError('directory names not support')
+            self._chdir(dirname, update_curdir=False)
         result = []
         Entry_Ptr = adflib.POINTER(adflib.Entry)
         list = adflib.adfGetDirEnt(vol, vol[0].curDirPtr)
@@ -102,7 +116,7 @@ class Adf(object):
         
         adflib.adfFreeDirList(list)
         if dirname:
-            adflib.adfToRootDir(vol)
+            self._chdir(self._curdir)
         return result
     
     def open(self):
