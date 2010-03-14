@@ -19,6 +19,26 @@ class AdfCmdInterpreter(cmd.Cmd):
         self.adf_filename = adf_filename
         self.adfobj = Adf(self.adf_filename)
         
+    def do_print(self, line=None):
+        """print file to stdout"""
+        filename = line
+        #filename='Disk.info'
+        #filename='/Disk.info' # bad (leading slash
+        #filename='nothere' # bad its missing, duh!
+        if filename:
+            print 'accessing %r' % filename
+            try:
+                result = self.adfobj.get_file(filename)
+            except AdfIOException, info:
+                print 'error reading file'
+                print '\t%s' % info
+                return
+
+            print '%d bytes read from %s' % (len(result), filename)
+            print repr(result )
+        else:
+            print 'missing filename'
+    
     def do_cd(self, line=None):
         """change directory"""
         return self.do_chdir(line)

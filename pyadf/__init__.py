@@ -4,6 +4,7 @@
 #
 
 import os
+import ctypes
 
 import adflib
 
@@ -97,14 +98,18 @@ class Adf(object):
         
         self.open()  # kinda nasty doing work in the constructor....
     
+    def normpath(self, filepath):
+        filepath = filepath.replace('\\', '/')  # Allow Windows style paths (just in case they slip in)
+        filepath = filepath.replace(':', '/')  # Allow Amiga style paths (just in case they slip in)
+        return filepath
+    
     def chdir(self, dirname, ignore_error=False):
         vol = self.vol
         return self._chdir(dirname, ignore_error=ignore_error)
         
     def _chdir(self, dirname, update_curdir=True, ignore_error=False):
         vol = self.vol
-        dirname = dirname.replace('\\', '/')  # Allow Windows style paths (just in case they slip in)
-        dirname = dirname.replace(':', '/')  # Allow Amiga style paths (just in case they slip in)
+        dirname = self.normpath(dirname)
         if dirname.startswith('/'):
             adflib.adfToRootDir(vol)
             if update_curdir:
@@ -148,6 +153,52 @@ class Adf(object):
         if dirname:
             self._chdir(self._curdir)
         return result
+    
+    def get_file(self, filename):
+        """return Python string which is the file contents.
+        NOTE/FIXME filename needs to be a file in the root directory at the moment.
+        FIXME if a directory name is passed in need to fail!
+        """
+        vol = self.vol
+        filename = self.normpath(filename)
+        if filename.startswith('/'):
+            # trim leading slash
+            filename = filename[1:]
+        file_in_adf = adflib.adfOpenFile(vol, filename, "r");
+        if not file_in_adf:
+            # file probably not there
+            raise AdfIOException('unable to filename %s for read' % filename)
+            return
+        
+        #print 'adffile', repr(file_in_adf)
+        #print 'type adffile', type(file_in_adf)
+        #print 'dir adffile', dir(file_in_adf)
+        #print 'adffile[0]', repr(file_in_adf[0])
+        #adffile = adffile[0]
+        tmp_buffer_size = 1024*8
+        mybuff_type = ctypes.c_ubyte * tmp_buffer_size
+        mybuff = mybuff_type() ## probably a better way than this
+        #mybuff_ptr = ctypes.pointer(mybuff)
+        eof_yet = adflib.adfEndOfFile(file_in_adf)
+        #print 'eof_yet ', eof_yet 
+        #print 'eof_yet ', type(eof_yet )
+        tmp_str = []
+        while not eof_yet:
+            n = adflib.adfReadFile(file_in_adf, tmp_buffer_size, ctypes.byref(mybuff))
+            eof_yet = adflib.adfEndOfFile(file_in_adf)
+            #print 'eof_yet ', eof_yet 
+            #print 'eof_yet ', type(eof_yet )
+            #print 'n', n
+            #print 'mybuff', mybuff
+            #print 'mybuff', dir(mybuff)
+            #print 'mybuff', str(mybuff)
+            # FIXME performance of this is poor
+            for x in mybuff[:n]:
+                tmp_str.append(chr(x))
+            #print 'tmp_str', tmp_str
+            #print 'len tmp_str', len(tmp_str)
+        return ''.join(tmp_str)
+        
     
     def open(self):
         ## not sure about name
