@@ -103,6 +103,14 @@ class Adf(object):
         filepath = filepath.replace(':', '/')  # Allow Amiga style paths (just in case they slip in)
         return filepath
     
+    def splitpath(self, filepath):
+        filepath = self.normpath(filepath)
+        result = []
+        for tmpdir in filepath.split('/'):
+            if tmpdir:
+                result.append(tmpdir)
+        return result
+    
     def chdir(self, dirname, ignore_error=False):
         vol = self.vol
         return self._chdir(dirname, ignore_error=ignore_error)
@@ -156,17 +164,24 @@ class Adf(object):
     
     def get_file(self, filename):
         """return Python string which is the file contents.
-        NOTE/FIXME filename needs to be a file in the root directory at the moment.
+        NOTE/FIXME filename needs to be a file in the current directory at the moment.
         FIXME if a directory name is passed in need to fail!
         """
         vol = self.vol
         filename = self.normpath(filename)
-        if filename.startswith('/'):
+        splitpaths = self.splitpath(filename)
+        if len(splitpaths) >1:
+            #if filename.startswith('/'):
             # trim leading slash
-            filename = filename[1:]
+            #filename = filename[1:]
+            filename = splitpaths[-1]
+            tmp_dirname = splitpaths[:-1]
+            tmp_dirname= '/'.join(tmp_dirname)
+            self._chdir(tmp_dirname, update_curdir=False, ignore_error=False)
         file_in_adf = adflib.adfOpenFile(vol, filename, "r");
         if not file_in_adf:
             # file probably not there
+            self._chdir(self._curdir)
             raise AdfIOException('unable to filename %s for read' % filename)
             return
         
@@ -197,6 +212,7 @@ class Adf(object):
                 tmp_str.append(chr(x))
             #print 'tmp_str', tmp_str
             #print 'len tmp_str', len(tmp_str)
+        self._chdir(self._curdir)
         return ''.join(tmp_str)
         
     

@@ -35,7 +35,27 @@ class AdfCmdInterpreter(cmd.Cmd):
                 return
 
             print '%d bytes read from %s' % (len(result), filename)
-            print repr(result )
+            print repr(result)
+        else:
+            print 'missing filename'
+            
+    def do_printraw(self, line=None):
+        """print file to stdout"""
+        filename = line
+        #filename='Disk.info'
+        #filename='/Disk.info' # bad (leading slash
+        #filename='nothere' # bad its missing, duh!
+        if filename:
+            print 'accessing %r' % filename
+            try:
+                result = self.adfobj.get_file(filename)
+            except AdfIOException, info:
+                print 'error reading file'
+                print '\t%s' % info
+                return
+
+            print '%d bytes read from %s' % (len(result), filename)
+            print result
         else:
             print 'missing filename'
     
