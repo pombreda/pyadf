@@ -135,6 +135,10 @@ class AdfCmdInterpreter(cmd.Cmd):
     def do_quit(self, line=None):
         """Quit/Exit"""
         return self.do_exit(line)
+        
+    def do_bye(self, line=None):
+        """Quit/Exit"""
+        return self.do_exit(line)
 
 
 
