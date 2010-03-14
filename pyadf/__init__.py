@@ -41,10 +41,27 @@ class AdfFileInfo(object):
         self.fpath = fpath
         self.fsector = fsector
         self.fname = fname
+        print repr(self.fname)
         self.fcomment = fcomment
     
     def __repr__(self):
         return repr(self.__dict__)
+    
+    def pretty_str(self):
+        """return pretty output for the file entry"""
+        date_str = "%4d/%02d/%02d  %2d:%02d:%02d" % self.fdate
+        if self.fpath:
+            name_str = "%s/"%(self.fpath,)
+        else:
+            name_str = ""
+        if self.ftype == adflib.ST_DIR:
+            name_str += "%s/"%(self.fname,)
+            size_str = ' ' * 7
+        else:
+            name_str += "%s"%(self.fname,)
+            size_str = "%7d" %(self.fsize,)
+        
+        return date_str + ' ' + size_str + ' ' + name_str 
     
 
 def process_entry(vol_ptr, entry_ptr, file_path):
@@ -80,28 +97,41 @@ class Adf(object):
         
         self.open()  # kinda nasty doing work in the constructor....
     
-    def chdir(self, dirname):
+    def chdir(self, dirname, ignore_error=False):
         vol = self.vol
-        self._chdir(dirname)
+        return self._chdir(dirname, ignore_error=ignore_error)
         
-    def _chdir(self, dirname, update_curdir=True):
+    def _chdir(self, dirname, update_curdir=True, ignore_error=False):
         vol = self.vol
         dirname = dirname.replace('\\', '/')  # Allow Windows style paths (just in case they slip in)
-        if dirname in ['/', ':']:
+        dirname = dirname.replace(':', '/')  # Allow Amiga style paths (just in case they slip in)
+        if dirname.startswith('/'):
             adflib.adfToRootDir(vol)
             if update_curdir:
                 self._curdir = '/'
+        if dirname == '/':
+            return True
         else:
             for tmpdir in dirname.split('/'):
                 if tmpdir:
-                    adflib.adfChangeDir(vol, tmpdir)
-            if update_curdir:
-                self._curdir = dirname
+                    result = adflib.adfChangeDir(vol, tmpdir)
+                    if result == -1:
+                        # FAIL
+                        if ignore_error:
+                            return False
+                        else:
+                            raise AdfIOException('error changing directory to %s in %s' % (tmpdir, dirname))
+                    else:
+                        if update_curdir:
+                            self._curdir += dirname+'/'
+        return True
     
     def ls_dir(self, dirname=None):
         vol = self.vol
         if dirname:
             self._chdir(dirname, update_curdir=False)
+        else:
+            self._chdir(self._curdir)
         result = []
         Entry_Ptr = adflib.POINTER(adflib.Entry)
         list = adflib.adfGetDirEnt(vol, vol[0].curDirPtr)
