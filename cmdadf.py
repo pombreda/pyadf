@@ -8,6 +8,7 @@ Should be pep8 compliant.
 """
 
 import sys
+import shlex
 import cmd
 
 from pyadf import Adf, AdfIOException
@@ -42,9 +43,6 @@ class AdfCmdInterpreter(cmd.Cmd):
     def do_printraw(self, line=None):
         """print file to stdout"""
         filename = line
-        #filename='Disk.info'
-        #filename='/Disk.info' # bad (leading slash
-        #filename='nothere' # bad its missing, duh!
         if filename:
             print 'accessing %r' % filename
             try:
@@ -56,6 +54,36 @@ class AdfCmdInterpreter(cmd.Cmd):
 
             print '%d bytes read from %s' % (len(result), filename)
             print result
+        else:
+            print 'missing filename'
+    
+    def do_get(self, line=None):
+        """get file to local filesystem
+                get adf_name [local_name]
+        * Use double "quotes" around names.
+        * local_name defaults to adf_name is ommited
+        """
+        ## TODO sanitize filenames for local filesystem?
+        filename = line
+        if filename:
+            lexed_names = shlex.split(filename)
+            if len(lexed_names) >=2:
+                filename = lexed_names[0]
+                local_filename = lexed_names[1]
+            else:
+                local_filename = filename
+            print 'get %r' % filename
+            try:
+                result = self.adfobj.get_file(filename)
+            except AdfIOException, info:
+                print 'error reading file'
+                print '\t%s' % info
+                return
+
+            print '%d bytes read from %s' % (len(result), filename)
+            f = open(local_filename, 'wb')
+            f.write(result)
+            f.close()
         else:
             print 'missing filename'
     

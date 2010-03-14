@@ -42,7 +42,6 @@ class AdfFileInfo(object):
         self.fpath = fpath
         self.fsector = fsector
         self.fname = fname
-        print repr(self.fname)
         self.fcomment = fcomment
     
     def __repr__(self):
