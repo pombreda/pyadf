@@ -23,9 +23,6 @@ class AdfCmdInterpreter(cmd.Cmd):
     def do_print(self, line=None):
         """print file to stdout"""
         filename = line
-        #filename='Disk.info'
-        #filename='/Disk.info' # bad (leading slash
-        #filename='nothere' # bad its missing, duh!
         if filename:
             print 'accessing %r' % filename
             try:
@@ -87,10 +84,6 @@ class AdfCmdInterpreter(cmd.Cmd):
         else:
             print 'missing filename'
     
-    def do_cd(self, line=None):
-        """change directory"""
-        return self.do_chdir(line)
-    
     def do_chdir(self, line=None):
         """change directory"""
         if line:
@@ -102,18 +95,15 @@ class AdfCmdInterpreter(cmd.Cmd):
             try:
                 result = self.adfobj.chdir(line)
             except AdfIOException, info:
-                print 'unable to changed directory'
+                print 'unable to change directory'
                 print '\t%s' % info
         else:
             # Windows style show current directory
             print self.adfobj._curdir
-        
-    def do_dir(self, line):
-        """Directory listing"""
-        return self.do_ls(line)
-        
+    do_cd = do_chdir
+    
     def do_ls(self, line=None):
-        """Directory listing, not flags are supported only directory name/path"""
+        """Directory listing. Flags are NOT supported only directory name/path"""
         if line is None:
             list_dir_res = self.adfobj.ls_dir()
         else:
@@ -123,24 +113,17 @@ class AdfCmdInterpreter(cmd.Cmd):
                 print 'bad directory specified'
                 print '\t%s' % info
                 return
-        #print list_dir_res
         for x in list_dir_res:
             print x.pretty_str()
+    do_list = do_ls
+    do_dir = do_ls
     
     def do_exit(self, line=None):
         """Quit/Exit"""
         print "Quitting..."
         return 1
-
-    def do_quit(self, line=None):
-        """Quit/Exit"""
-        return self.do_exit(line)
-        
-    def do_bye(self, line=None):
-        """Quit/Exit"""
-        return self.do_exit(line)
-
-
+    do_quit = do_exit
+    do_bye = do_exit
 
 
 def main(argv=None):
