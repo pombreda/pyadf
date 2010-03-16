@@ -14,6 +14,24 @@ class AdfBaseException(Exception):
 class AdfIOException(AdfBaseException):
     '''I/O exception'''
 
+class AdfVersionInfo(object):
+    """There are 2 kinds of version information available:
+        * what verson of ADFLib was adflib.py created with?
+        * what verson of adflib.dll or adf.so (etc.) are we running with?
+    """
+    def __init__(self):
+        # what was adflib.py "created" with?
+        self.headers_version = adflib.ADFLIB_VERSION
+        self.headers_date = adflib.ADFLIB_DATE
+        
+        # what version of adflib are we running with?
+        self.lib_version = adflib.adfGetVersionNumber()
+        self.lib_date = adflib.adfGetVersionDate()
+    
+    def __repr__(self):
+        return repr(self.__dict__)
+
+
 adflib_init = False
 
 # FIXME These are naive, if there are multiple calls we could end up free'ing things that are still in use

@@ -11,7 +11,7 @@ import sys
 import shlex
 import cmd
 
-from pyadf import Adf, AdfIOException
+from pyadf import Adf, AdfIOException, AdfVersionInfo
 
 class AdfCmdInterpreter(cmd.Cmd):
     
@@ -20,6 +20,12 @@ class AdfCmdInterpreter(cmd.Cmd):
         self.adf_filename = adf_filename
         self.adfobj = Adf(self.adf_filename)
         
+    def do_version(self, line=None):
+        """adflib version info"""
+        version_info = AdfVersionInfo()
+        print version_info
+    do_ver = do_version
+    
     def do_print(self, line=None):
         """print file to stdout"""
         filename = line
