@@ -1,0 +1,6 @@
+This is a text file with Windows/DOS style line endings.
+I.e. cr+lf
+
+It is 170 bytes in length if treated as binary.
+
+It is 164 bytes in length if treated as text.

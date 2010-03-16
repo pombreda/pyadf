@@ -16,7 +16,7 @@ def main(argv=None):
         argv = sys.argv
 
     ## TEMP code
-    adffilename = 'workbench13.adf'
+    adffilename = 'tests/data/pyadftest.adf'
     class TempOpt(object):
         pass
     
@@ -27,7 +27,7 @@ def main(argv=None):
     list_dir_res = adfobj.ls_dir()
     print list_dir_res
     
-    mydirname = 'devs'
+    mydirname = 'dir1'
     print 'DIR:', mydirname
     list_dir_res = adfobj.ls_dir(mydirname)
     print list_dir_res
@@ -36,22 +36,22 @@ def main(argv=None):
     list_dir_res = adfobj.ls_dir()
     print list_dir_res
 
-    mydirname = 'devs/keymaps'
+    mydirname = 'dir1/subdir1'
     print 'DIR:', mydirname
     list_dir_res = adfobj.ls_dir(mydirname)
     print list_dir_res
     
-    mydirname = 'devs/keymaps/'  # with trailing slash
+    mydirname = 'dir1/subdir1/'  # with trailing slash
     print 'DIR:', mydirname
     list_dir_res = adfobj.ls_dir(mydirname)
     print list_dir_res
 
-    mydirname = '/devs/keymaps/'  # with leading and trailing slash
+    mydirname = '/dir1/subdir1/'  # with leading and trailing slash
     print 'DIR:', mydirname
     list_dir_res = adfobj.ls_dir(mydirname)
     print list_dir_res
 
-    mydirname = 'devs\\keymaps\\'  # with Windows style path
+    mydirname = 'dir1\\subdir1\\'  # with Windows style path
     print 'DIR:', mydirname
     list_dir_res = adfobj.ls_dir(mydirname)
     print list_dir_res
@@ -60,8 +60,8 @@ def main(argv=None):
     list_dir_res = adfobj.ls_dir()
     print list_dir_res
 
-    print 'chdir', 'devs'
-    adfobj.chdir('devs')
+    print 'chdir', 'dir1'
+    adfobj.chdir('dir1')
     
     print 'DIR:', '*NOT PASSED IN*'
     list_dir_res = adfobj.ls_dir()

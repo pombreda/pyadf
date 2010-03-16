@@ -1,0 +1,6 @@
+This is a text file with UNIX style line endings.
+I.e. lf
+
+It is 154 bytes in length if treated as binary.
+
+It is 154 bytes in length if treated as text.

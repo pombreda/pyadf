@@ -51,7 +51,7 @@ def main(argv=None):
         argv = sys.argv
     
     ## TEMP code
-    adffilename = 'workbench13.adf'
+    adffilename = 'tests/data/pyadftest.adf'
     class TempOpt(object):
         pass
     
