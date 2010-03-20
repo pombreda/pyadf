@@ -102,16 +102,16 @@ def process_entry(vol_ptr, entry_ptr, file_path):
 class Adf(object):
     """A pythonic api wrapper around ADFlib
     """
-    def __init__(self, adf_filename, volnum = 0):
-        if not os.path.exists(adf_filename):
-            raise AdfIOException('%s filename does not exist' % adf_filename)
-        
+    def __init__(self, adf_filename, volnum=0):
         self.adf_filename = adf_filename
         self.vol = None
         self.dev = None
         self.volnum = volnum
         
         self._curdir = '/'
+        
+        if not os.path.exists(adf_filename):
+            raise AdfIOException('%s filename does not exist' % adf_filename)
         
         self.open()  # kinda nasty doing work in the constructor....
     
@@ -231,7 +231,14 @@ class Adf(object):
             #print 'len tmp_str', len(tmp_str)
         self._chdir(self._curdir)
         return ''.join(tmp_str)
-        
+    
+    def unlink(self, filename):
+        """delete a file"""
+        raise NotImplementedError('unlink not yet')
+    
+    def rename(self, old, new):
+        """rename a file or directory"""
+        raise NotImplementedError('rename not yet')
     
     def open(self):
         ## not sure about name
@@ -245,8 +252,10 @@ class Adf(object):
         ## not sure about name
         if self.vol:
             adflib.adfUnMount(self.vol)
+            self.vol = None
         if self.dev:
             adflib.adfUnMountDev(self.dev)
+            self.dev = None
 
         adf_cleanup()
     
