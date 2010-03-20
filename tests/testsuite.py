@@ -131,8 +131,14 @@ class PyadfTest(unittest.TestCase):
     def testRenameReadOnlyMount(self):
         """Rename a file when adf opened in readonly mode"""
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        adfobj = self.open(mode='r')
+        def do_rename():
+            adfobj.rename('juggler_adnim.gif', 'juggler_anim.gif')
+        self.failUnlessRaises(AdfIOException, do_rename)
+        adfobj.close()
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
+        ## TODO maybe get too as a sanity check?
 
     def testRenameNonExistent(self):
         """Rename a file that does not exist"""
@@ -148,19 +154,27 @@ class PyadfTest(unittest.TestCase):
 
     def testDelFile(self):
         """Delete a file from an ADF, use list to confirm"""
+        file_to_delete = 'juggler_adnim.gif'
         adf_filename = self.adf_testfilename
         adfobj = self.open(mode='w')
-        adfobj.unlink('juggler_adnim.gif')
+        adfobj.unlink(file_to_delete)
         adfobj.close()
-        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        expect_result.remove(file_to_delete)
         self.list_and_compare(expect_result)
         ## TODO maybe get too as a sanity check?
 
     def testDelDir(self):
         """Delete a(n empty) directory from an ADF, use list to confirm"""
+        file_to_delete = 'UPPERCASEDIR'
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        adfobj = self.open(mode='w')
+        adfobj.unlink(file_to_delete)
+        adfobj.close()
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        expect_result.remove(file_to_delete)
+        self.list_and_compare(expect_result)
+        ## TODO maybe get too as a sanity check?
 
     def testDelNonExistent(self):
         """Attempt to delete a file from an ADF that does not exist"""
