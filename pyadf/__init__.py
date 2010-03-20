@@ -102,11 +102,14 @@ def process_entry(vol_ptr, entry_ptr, file_path):
 class Adf(object):
     """A pythonic api wrapper around ADFlib
     """
-    def __init__(self, adf_filename, volnum=0):
+    def __init__(self, adf_filename, volnum=0, mode='r'):
         self.adf_filename = adf_filename
         self.vol = None
         self.dev = None
         self.volnum = volnum
+        self.readonly_mode = True
+        if mode == 'w':
+            self.readonly_mode = False
         
         self._curdir = '/'
         
@@ -234,19 +237,33 @@ class Adf(object):
     
     def unlink(self, filename):
         """delete a file"""
-        raise NotImplementedError('unlink not yet')
+        ## TODO not opened in write mode check?
+        vol = self.vol
+        result = adflib.adfRemoveEntry(vol, vol[0].curDirPtr, filename)
+        if result == -1:
+            # FAIL
+            raise AdfIOException('unlink/delete failed on %s' % (filename))
+        # else flush? incase of errors later on
     
     def rename(self, old, new):
         """rename a file or directory"""
-        raise NotImplementedError('rename not yet')
+        ## TODO not opened in write mode check?
+        vol = self.vol
+        result = adflib.adfRenameEntry(vol, vol[0].curDirPtr, old, vol[0].curDirPtr, new)
+        if result == -1:
+            # FAIL
+            raise AdfIOException('rename %s to %s' % (old, new))
+        # else flush? incase of errors later on
+
     
     def open(self):
+        readonly_mode = self.readonly_mode
         ## not sure about name
         adf_setup()
         if not self.dev:
-            self.dev = adflib.adfMountDev(self.adf_filename, True)
+            self.dev = adflib.adfMountDev(self.adf_filename, readonly_mode)
         if not self.vol:
-            self.vol = adflib.adfMount(self.dev, self.volnum, True)
+            self.vol = adflib.adfMount(self.dev, self.volnum, readonly_mode)
 
     def close(self):
         ## not sure about name

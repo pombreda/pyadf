@@ -15,10 +15,11 @@ from pyadf import Adf, AdfIOException, AdfVersionInfo
 
 class AdfCmdInterpreter(cmd.Cmd):
     
-    def __init__(self, adf_filename):
+    def __init__(self, adf_filename, mode='r'):
         cmd.Cmd.__init__(self)
         self.adf_filename = adf_filename
-        self.adfobj = Adf(self.adf_filename)
+        self.mode = mode
+        self.adfobj = Adf(self.adf_filename, mode=self.mode)
         
     def do_version(self, line=None):
         """adflib version info"""
@@ -123,7 +124,46 @@ class AdfCmdInterpreter(cmd.Cmd):
             print x.pretty_str()
     do_list = do_ls
     do_dir = do_ls
-    
+
+    def do_rename(self, line=None):
+        """rename file/empty-directory
+        """
+        filename = line
+        if filename:
+            lexed_names = shlex.split(filename)
+            if len(lexed_names) >=2:
+                old = lexed_names[0]
+                new = lexed_names[1]
+            else:
+                print 'missing names'
+                return
+            try:
+                result = self.adfobj.rename(old, new)
+            except AdfIOException, info:
+                print 'error renaming'
+                print '\t%s' % info
+                return
+        else:
+            print 'missing names'
+    do_ren = do_rename
+    do_mv = do_rename
+
+    def do_delete(self, line=None):
+        """delte file """
+        filename = line
+        if filename:
+            try:
+                result = self.adfobj.unlink(filename)
+            except AdfIOException, info:
+                print 'error deleting file'
+                print '\t%s' % info
+                return
+        else:
+            print 'missing filename'
+    do_del = do_delete
+    do_rm = do_delete
+    do_unlink = do_delete
+
     def do_exit(self, line=None):
         """Quit/Exit"""
         print "Quitting..."
@@ -138,7 +178,9 @@ def main(argv=None):
     
     adffilename = argv[1]
     
-    interpreter = AdfCmdInterpreter(adffilename)
+    mode='r'
+    #mode='w' # enable write, e.g. rename, delete, add files
+    interpreter = AdfCmdInterpreter(adffilename, mode=mode)
     interpreter.cmdloop()
 
     return 0

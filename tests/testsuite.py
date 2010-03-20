@@ -32,9 +32,9 @@ class PyadfTest(unittest.TestCase):
         os.chmod(self.adf_testfilename, stat.S_IWRITE)
         self.adfobj = None
 
-    def open(self, adf_filename=None):
+    def open(self, adf_filename=None, mode='r'):
         adf_filename = adf_filename or self.adf_testfilename
-        self.adfobj = Adf(adf_filename)
+        self.adfobj = Adf(adf_filename, mode=mode)
         return self.adfobj
 
     def tearDown(self):
@@ -52,19 +52,24 @@ class PyadfTest(unittest.TestCase):
         self.failIf(os.path.exists(adf_filename), '%r should not exist!'%adf_filename)
         self.failUnlessRaises(AdfIOException, open_non_existent)
 
-    def testListRoot(self):
+    def list_and_compare(self, expect_result):
         """Directory listing from an ADF"""
         adf_filename = self.adf_testfilename
         adfobj = self.open()
         list_dir_res = adfobj.ls_dir()
-        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
         result = []
         for x in list_dir_res:
             # for now just tests names
             result.append(x.fname)
         expect_result.sort()
         result.sort()
+        adfobj.close()
         self.failUnlessEqual(expect_result, result)
+    
+    def testListRoot(self):
+        """Directory listing from an ADF"""
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
 
     def get_and_compare(self, filename):
         """get a file from an ADF"""
@@ -75,6 +80,7 @@ class PyadfTest(unittest.TestCase):
         expect_result = f.read()
         f.close()
         result = adfobj.get_file(filename)
+        adfobj.close()
         self.failUnlessEqual(expect_result, result)
     
     def testGetSmall(self):
@@ -115,8 +121,17 @@ class PyadfTest(unittest.TestCase):
     def testRenameFile(self):
         """Rename a file from an ADF, use list to confirm"""
         adf_filename = self.adf_testfilename
+        adfobj = self.open(mode='w')
+        adfobj.rename('juggler_adnim.gif', 'juggler_anim.gif')
+        adfobj.close()
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_anim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
+        ## TODO maybe get too as a sanity check?
+
+    def testRenameReadOnlyMount(self):
+        """Rename a file when adf opened in readonly mode"""
+        adf_filename = self.adf_testfilename
         adfobj = self.open()
-        # rename juggler_adnim.gif to juggler_anim.gif
         self.failIf(True)
 
     def testRenameNonExistent(self):
@@ -125,11 +140,21 @@ class PyadfTest(unittest.TestCase):
         adfobj = self.open()
         self.failIf(True)
 
-    def testDelFile(self):
-        """Delete a file from an ADF, use list to confirm"""
+    def testRenameInSub(self):
+        """Rename a file that is in a subdirectory"""
         adf_filename = self.adf_testfilename
         adfobj = self.open()
         self.failIf(True)
+
+    def testDelFile(self):
+        """Delete a file from an ADF, use list to confirm"""
+        adf_filename = self.adf_testfilename
+        adfobj = self.open(mode='w')
+        adfobj.unlink('juggler_adnim.gif')
+        adfobj.close()
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
+        ## TODO maybe get too as a sanity check?
 
     def testDelDir(self):
         """Delete a(n empty) directory from an ADF, use list to confirm"""
@@ -140,11 +165,23 @@ class PyadfTest(unittest.TestCase):
     def testDelNonExistent(self):
         """Attempt to delete a file from an ADF that does not exist"""
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        adfobj = self.open(mode='w')
+        def do_del():
+            adfobj.unlink('doesnotexist.gif')
+        self.failUnlessRaises(AdfIOException, do_del)
+        adfobj.close()
+        # consider simply calling testListRoot
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
 
     def testDelNonEmptyDir(self):
         """Attempt to delete a directory from an ADF that is not empty"""
+        adf_filename = self.adf_testfilename
+        adfobj = self.open()
+        self.failIf(True)
+
+    def testMakeDir(self):
+        """Test various create directory call(s)"""
         adf_filename = self.adf_testfilename
         adfobj = self.open()
         self.failIf(True)
