@@ -143,8 +143,14 @@ class PyadfTest(unittest.TestCase):
     def testRenameNonExistent(self):
         """Rename a file that does not exist"""
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        adfobj = self.open(mode='w')
+        def do_rename():
+            adfobj.rename('renamenotexist.gif', 'juggler_anim.gif')
+        self.failUnlessRaises(AdfIOException, do_rename)
+        adfobj.close()
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
+        ## TODO maybe get too as a sanity check?
 
     def testRenameInSub(self):
         """Rename a file that is in a subdirectory"""
@@ -190,9 +196,16 @@ class PyadfTest(unittest.TestCase):
 
     def testDelNonEmptyDir(self):
         """Attempt to delete a directory from an ADF that is not empty"""
+        file_to_delete = 'dir1'
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        adfobj = self.open(mode='w')
+        def do_del():
+            adfobj.unlink(file_to_delete)
+        self.failUnlessRaises(AdfIOException, do_del)
+        adfobj.close()
+        # consider simply calling testListRoot
+        expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        self.list_and_compare(expect_result)
 
     def testMakeDir(self):
         """Test various create directory call(s)"""
