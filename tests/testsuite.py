@@ -52,10 +52,10 @@ class PyadfTest(unittest.TestCase):
         self.failIf(os.path.exists(adf_filename), '%r should not exist!'%adf_filename)
         self.failUnlessRaises(AdfIOException, open_non_existent)
 
-    def list_and_compare(self, expect_result):
+    def list_and_compare(self, expect_result, adf_filename=None):
         """Directory listing from an ADF"""
-        adf_filename = self.adf_testfilename
-        adfobj = self.open()
+        adf_filename = adf_filename or self.adf_testfilename
+        adfobj = self.open(adf_filename)
         list_dir_res = adfobj.ls_dir()
         result = []
         for x in list_dir_res:
@@ -169,6 +169,38 @@ class PyadfTest(unittest.TestCase):
         expect_result.remove(file_to_delete)
         self.list_and_compare(expect_result)
         ## TODO maybe get too as a sanity check?
+
+    def testDelFileTwoAdfs(self):
+        """Delete different files from different ADFs, use list to confirm"""
+        mode = 'w'
+        adf_filename1 = 'testsuite_pyadftest1.adf'
+        file_to_delete1 = 'juggler_adnim.gif'
+        shutil.copy(self.adf_canonfilename, adf_filename1)
+        os.chmod(adf_filename1, stat.S_IWRITE)
+        adfobj1 = Adf(adf_filename1, mode=mode)
+        
+        adf_filename2 = 'testsuite_pyadftest2.adf'
+        file_to_delete2 = 'UPPERCASEDIR'
+        shutil.copy(self.adf_canonfilename, adf_filename2)
+        os.chmod(adf_filename2, stat.S_IWRITE)
+        adfobj2 = Adf(adf_filename2, mode=mode)
+        
+        adfobj1.unlink(file_to_delete1)
+        adfobj2.unlink(file_to_delete2)
+        
+        adfobj1.close()
+        adfobj2.close()
+
+        expect_result1 = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        expect_result1.remove(file_to_delete1)
+        self.list_and_compare(expect_result1, adf_filename=adf_filename1)
+        
+        expect_result2 = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
+        expect_result2.remove(file_to_delete2)
+        self.list_and_compare(expect_result2, adf_filename=adf_filename2)
+
+
+
 
     def testDelDir(self):
         """Delete a(n empty) directory from an ADF, use list to confirm"""

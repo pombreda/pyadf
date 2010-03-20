@@ -32,20 +32,40 @@ class AdfVersionInfo(object):
         return repr(self.__dict__)
 
 
-adflib_init = False
+class _InternalAdfEnv(object):
+    """whislt this is NOT a singleton, only create one.
+    I.e. singleton is not yet enforced
+    
+    Still naive but doesn't allocate environment unless adf file is opened
+    clean up happens at (modue) desconstruction time when single_internaladfenv is destroyed.
+    Should allow multiple adf's to be opened
+    """
+    def __init__(self):
+        self.adflib_init = False
+    
+    def adf_setup(self):
+        if not self.adflib_init:
+            adflib.adfEnvInitDefault()
+            self.adflib_init = True
+    
+    def adf_cleanup(self):
+        # do nothing for now, let deconstructor handle this
+        # may not work with Jython.
+        pass
+    
+    def __del__(self):
+        if not self.adflib_init:
+            adflib.adfEnvCleanUp()
+            self.adflib_init = False
+
+single_internaladfenv = _InternalAdfEnv()
 
 # FIXME These are naive, if there are multiple calls we could end up free'ing things that are still in use
 def adf_setup():
-    global adflib_init
-    if not adflib_init:
-        adflib.adfEnvInitDefault()
-        adflib_init = True
+    single_internaladfenv.adf_setup()
 
 def adf_cleanup():
-    global adflib_init
-    if not adflib_init:
-        adflib.adfEnvCleanUp()
-        adflib_init = False
+    single_internaladfenv.adf_cleanup()
 
 
 class AdfFileInfo(object):
