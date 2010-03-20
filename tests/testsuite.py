@@ -251,6 +251,10 @@ class PyadfTest(unittest.TestCase):
         adfobj = self.open()
         self.failIf(True)
 
+    def testCreateEmptyAdf(self):
+        """Create a new ADF file that is empty"""
+        self.failIf(True)
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv

@@ -43,12 +43,13 @@ class _InternalAdfEnv(object):
     def __init__(self):
         self.adflib_init = False
     
-    def adf_setup(self):
+    def acquire(self):
+        # simulate a Semaphore, only one in python lib is in threading module
         if not self.adflib_init:
             adflib.adfEnvInitDefault()
             self.adflib_init = True
     
-    def adf_cleanup(self):
+    def release(self):
         # do nothing for now, let deconstructor handle this
         # may not work with Jython.
         pass
@@ -58,14 +59,13 @@ class _InternalAdfEnv(object):
             adflib.adfEnvCleanUp()
             self.adflib_init = False
 
-single_internaladfenv = _InternalAdfEnv()
+_single_internaladfenv = _InternalAdfEnv()
 
-# FIXME These are naive, if there are multiple calls we could end up free'ing things that are still in use
 def adf_setup():
-    single_internaladfenv.adf_setup()
+    _single_internaladfenv.acquire()
 
 def adf_cleanup():
-    single_internaladfenv.adf_cleanup()
+    _single_internaladfenv.release()
 
 
 class AdfFileInfo(object):
@@ -275,6 +275,10 @@ class Adf(object):
             raise AdfIOException('rename %s to %s' % (old, new))
         # else flush? incase of errors later on
 
+    def diskname(self):
+        """return the volumn name
+        Could be a property rather than a function"""
+        raise NotImplementedError('Adf')
     
     def open(self):
         readonly_mode = self.readonly_mode
@@ -299,3 +303,8 @@ class Adf(object):
     def __del__(self):
         self.close()
 
+def create_empty_adf(adf_filename, diskname='empty'):
+    """Consider implementing as a Adf classmethod?
+    TODO add size params?
+    """
+    raise NotImplementedError('Adf')
