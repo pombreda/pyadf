@@ -91,6 +91,39 @@ class AdfCmdInterpreter(cmd.Cmd):
         else:
             print 'missing filename'
     
+    def do_put(self, line=None):
+        """out a file from local filesystem into adf
+                put adf_name [local_name]
+        * Use double "quotes" around names.
+        * local_name defaults to adf_name is ommited
+        """
+        ## TODO sanitize filenames for local filesystem?
+        filename = line
+        if filename:
+            lexed_names = shlex.split(filename)
+            if len(lexed_names) >=2:
+                local_filename = lexed_names[0]
+                filename = lexed_names[1]
+            else:
+                local_filename = filename
+            print 'put %r' % filename
+            
+            f = open(local_filename, 'rb')
+            data = f.read()
+            f.close()
+            
+            try:
+                self.adfobj.push_file(filename, data)
+            except AdfIOException, info:
+                print 'error writing file'
+                print '\t%s' % info
+                return
+
+            print '%d bytes read from %s' % (len(data), local_filename)
+
+        else:
+            print 'missing filename'
+    
     def do_chdir(self, line=None):
         """change directory"""
         if line:
