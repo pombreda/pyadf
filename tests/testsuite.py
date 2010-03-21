@@ -71,15 +71,24 @@ class PyadfTest(unittest.TestCase):
         expect_result = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
         self.list_and_compare(expect_result)
 
-    def get_and_compare(self, filename):
+    def get_datafile(self, filename):
+        """get a data file from example directory"""
+        canon_filename = os.path.join(test_directory, 'data', 'example_files', filename)
+        f = open(canon_filename, 'rb')
+        result = f.read()
+        f.close()
+        return result
+    
+    def get_and_compare(self, filename, filename_in_adf=None):
         """get a file from an ADF"""
+        filename_in_adf = filename_in_adf or filename
         adf_filename = self.adf_testfilename
         adfobj = self.open()
         canon_filename = os.path.join(test_directory, 'data', 'example_files', filename)
         f = open(canon_filename, 'rb')
         expect_result = f.read()
         f.close()
-        result = adfobj.get_file(filename)
+        result = adfobj.get_file(filename_in_adf)
         adfobj.close()
         self.failUnlessEqual(expect_result, result)
     
@@ -96,7 +105,7 @@ class PyadfTest(unittest.TestCase):
         self.get_and_compare('/dir1/a.txt')
     
     def testGetMedium(self):
-        """get a file medium sizedfrom an ADF"""
+        """get a binary file medium sized from an ADF"""
         self.get_and_compare('juggler_adnim.gif')
     
     def testInvalidOpen(self):
@@ -109,14 +118,55 @@ class PyadfTest(unittest.TestCase):
     def testPut(self):
         """put a file into an ADF"""
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        adfobj = self.open(mode='w')
+        data = self.get_datafile('A Christmas Carol stave1 by Charles Dickens.txt')
+        adfobj.push_file('carols1.txt', data)
+        adfobj.close()
+        self.get_and_compare('A Christmas Carol stave1 by Charles Dickens.txt', 'carols1.txt')
+
+    def testPutSmallUnix(self):
+        """put a file into an ADF"""
+        adf_filename = self.adf_testfilename
+        testfilename = 'unixtext.txt'
+        new_tmpfilename = 'tmpfile.tmp'
+        adfobj = self.open(mode='w')
+        data = self.get_datafile(testfilename)
+        adfobj.push_file(new_tmpfilename, data)
+        adfobj.close()
+        self.get_and_compare(testfilename, new_tmpfilename)
+
+    def testPutSmallWin(self):
+        """put a file into an ADF"""
+        adf_filename = self.adf_testfilename
+        testfilename = 'wintext.txt'
+        new_tmpfilename = 'tmpfile.tmp'
+        adfobj = self.open(mode='w')
+        data = self.get_datafile(testfilename)
+        adfobj.push_file(new_tmpfilename, data)
+        adfobj.close()
+        self.get_and_compare(testfilename, new_tmpfilename)
+
+    def testPutMediumBin(self):
+        """put a file into an ADF"""
+        adf_filename = self.adf_testfilename
+        testfilename = 'juggler_adnim.gif'
+        new_tmpfilename = 'tmpfile.tmp'
+        adfobj = self.open(mode='w')
+        data = self.get_datafile(testfilename)
+        adfobj.push_file(new_tmpfilename, data)
+        adfobj.close()
+        self.get_and_compare(testfilename, new_tmpfilename)
 
     def testPutTooBig(self):
         """put a file into an ADF that is larger than the ADG size. I.e. test Disk Full"""
+        self.failIf(True)  # adflib does not appear to error when fille is too big! Appears to be a bug in (c) ADFlib
         adf_filename = self.adf_testfilename
-        adfobj = self.open()
-        self.failIf(True)
+        testfilename = 'juggler_adnim.gif'
+        new_tmpfilename = 'tmpfile.tmp'
+        adfobj = self.open(mode='w')
+        data = '*' * 901120  # size of a regulat ADF image file so should be way too big
+        adfobj.push_file(new_tmpfilename, data)
+        adfobj.close()
 
     def testRenameFile(self):
         """Rename a file from an ADF, use list to confirm"""

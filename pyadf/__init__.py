@@ -256,8 +256,54 @@ class Adf(object):
                 tmp_str.append(chr(x))
             #print 'tmp_str', tmp_str
             #print 'len tmp_str', len(tmp_str)
+        adflib.adfCloseFile(file_in_adf)
         self._chdir(self._curdir)
         return ''.join(tmp_str)
+
+    def push_file(self, filename, file_contents):
+        """writes file_contents into filename
+        NOTE/FIXME filename needs to be a file in the current directory at the moment.
+        FIXME if a directory name is passed in need to fail!
+        """
+        vol = self.vol
+        filename = self.normpath(filename)
+        splitpaths = self.splitpath(filename)
+        if len(splitpaths) >1:
+            filename = splitpaths[-1]
+            tmp_dirname = splitpaths[:-1]
+            tmp_dirname= '/'.join(tmp_dirname)
+            self._chdir(tmp_dirname, update_curdir=False, ignore_error=False)
+        file_out_adf = adflib.adfOpenFile(vol, filename, "w");
+        if not file_out_adf:
+            # error, bad directory or adf file opened in readonly mode?
+            self._chdir(self._curdir)
+            raise AdfIOException('unable to create filename %s for read' % filename)
+            return
+        
+        tmp_buffer_size = 1024*8
+        mybuff_type = ctypes.c_ubyte * tmp_buffer_size
+        mybuff = mybuff_type() ## probably a better way than this
+        file_contents_len = len(file_contents)
+        file_contents_left = file_contents_len
+        eof_yet = file_contents_left <= 0
+        counter = 0
+        while not eof_yet:
+            tmp_counter = min(tmp_buffer_size, file_contents_left)
+            mybuff_counter = 0
+            for x in range(counter, counter + tmp_counter):
+                mybuff[mybuff_counter] = ord(file_contents[x])
+                mybuff_counter += 1  # maybe use enumerate instead?
+            counter += tmp_counter
+            file_contents_left -= tmp_counter
+            eof_yet = file_contents_left <= 0
+            
+            # long adfWriteFile(struct File* file, long n, unsigned char* buffer) 
+            n = adflib.adfWriteFile(file_out_adf, tmp_counter, ctypes.byref(mybuff))
+            #print 'write', n
+        
+        adflib.adfCloseFile(file_out_adf)
+
+
     
     def unlink(self, filename):
         """delete a file"""
