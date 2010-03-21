@@ -18,7 +18,7 @@ test_directory = os.path.abspath(os.path.dirname(__file__))
 # this path stuff doesn't really work
 sys.path.append(os.path.dirname(test_directory))  # nasty path hack
 sys.path.append(os.path.join(os.path.dirname(test_directory), "pyadf"))  # nasty path hack
-from pyadf import Adf, AdfIOException, AdfVersionInfo
+from pyadf import Adf, AdfIOException, AdfVersionInfo, create_empty_adf
 
 
 class PyadfTest(unittest.TestCase):
@@ -253,6 +253,10 @@ class PyadfTest(unittest.TestCase):
 
     def testCreateEmptyAdf(self):
         """Create a new ADF file that is empty"""
+        adf_filename = 'newadf.adf'
+        self.failIf(os.path.exists(adf_filename), '%r should not exist!'%adf_filename)
+        create_empty_adf(adf_filename)
+        # TODO add checks (files exists, size, try adding to it, etc. check volume name)
         self.failIf(True)
 
 def main(argv=None):
