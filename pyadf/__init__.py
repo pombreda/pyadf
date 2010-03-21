@@ -42,9 +42,11 @@ class _InternalAdfEnv(object):
     """
     def __init__(self):
         self.adflib_init = False
+        self.counter = 0
     
     def acquire(self):
         # simulate a Semaphore, only one in python lib is in threading module
+        self.counter += 1
         if not self.adflib_init:
             adflib.adfEnvInitDefault()
             self.adflib_init = True
@@ -52,6 +54,7 @@ class _InternalAdfEnv(object):
     def release(self):
         # do nothing for now, let deconstructor handle this
         # may not work with Jython.
+        self.counter -= 1
         pass
     
     def __del__(self):
@@ -124,6 +127,7 @@ class Adf(object):
     """
     def __init__(self, adf_filename, volnum=0, mode='r'):
         self.adf_filename = adf_filename
+        self.env = None
         self.vol = None
         self.dev = None
         self.volnum = volnum
@@ -283,7 +287,9 @@ class Adf(object):
     def open(self):
         readonly_mode = self.readonly_mode
         ## not sure about name
-        adf_setup()
+        if self.env is None:
+            self.env = True
+            _single_internaladfenv.acquire()
         if not self.dev:
             self.dev = adflib.adfMountDev(self.adf_filename, readonly_mode)
         if not self.vol:
@@ -297,8 +303,9 @@ class Adf(object):
         if self.dev:
             adflib.adfUnMountDev(self.dev)
             self.dev = None
-
-        adf_cleanup()
+        if self.env is not None:
+            _single_internaladfenv.release()
+            self.env = None
     
     def __del__(self):
         self.close()
