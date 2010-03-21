@@ -248,6 +248,9 @@ class PyadfTest(unittest.TestCase):
         expect_result2 = ['A Christmas Carol stave1 by Ch', 'unixtext.txt', 'read_file.py', 'juggler.png', 'wintext.txt', 'file with spaces.txt', 'juggler_adnim.gif', 'maximum_file_length_of_30.txt', 'AmigaLogo.iff', 'dir1', 'UPPERCASEDIR', 'readme.txt', 'MixedCaseDir']
         expect_result2.remove(file_to_delete2)
         self.list_and_compare(expect_result2, adf_filename=adf_filename2)
+        # remote temp adf files, NOTE if we get a failure cleanup here will not run
+        os.unlink(adf_filename1)
+        os.unlink(adf_filename2)
 
 
 
