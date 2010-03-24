@@ -29,7 +29,7 @@ class PyadfTest(unittest.TestCase):
         self.adf_canonfilename = os.path.join(test_directory, 'data', self.adf_canonfilename )
         # move below into re-copy method?
         shutil.copy(self.adf_canonfilename, self.adf_testfilename)
-        os.chmod(self.adf_testfilename, stat.S_IWRITE)
+        os.chmod(self.adf_testfilename, stat.S_IWRITE|stat.S_IREAD)
         self.adfobj = None
 
     def open(self, adf_filename=None, mode='r'):
