@@ -29,7 +29,8 @@ class PyadfTest(unittest.TestCase):
         self.adf_canonfilename = os.path.join(test_directory, 'data', self.adf_canonfilename )
         # move below into re-copy method?
         shutil.copy(self.adf_canonfilename, self.adf_testfilename)
-        os.chmod(self.adf_testfilename, stat.S_IWRITE|stat.S_IREAD)
+        self._fileperms = stat.S_IWRITE|stat.S_IREAD
+        os.chmod(self.adf_testfilename, self._fileperms)
         self.adfobj = None
 
     def open(self, adf_filename=None, mode='r'):
@@ -102,7 +103,7 @@ class PyadfTest(unittest.TestCase):
     
     def testGetSmallSubDir2(self):
         """get a file small sized from an ADF from a sub dir. Full path"""
-        self.get_and_compare('/dir1/a.txt')
+        self.get_and_compare('dir1/a.txt', '/dir1/a.txt')
     
     def testGetMedium(self):
         """get a binary file medium sized from an ADF"""
@@ -226,13 +227,13 @@ class PyadfTest(unittest.TestCase):
         adf_filename1 = 'testsuite_pyadftest1.adf'
         file_to_delete1 = 'juggler_adnim.gif'
         shutil.copy(self.adf_canonfilename, adf_filename1)
-        os.chmod(adf_filename1, stat.S_IWRITE)
+        os.chmod(adf_filename1, self._fileperms)
         adfobj1 = Adf(adf_filename1, mode=mode)
         
         adf_filename2 = 'testsuite_pyadftest2.adf'
         file_to_delete2 = 'UPPERCASEDIR'
         shutil.copy(self.adf_canonfilename, adf_filename2)
-        os.chmod(adf_filename2, stat.S_IWRITE)
+        os.chmod(adf_filename2, self._fileperms)
         adfobj2 = Adf(adf_filename2, mode=mode)
         
         adfobj1.unlink(file_to_delete1)
