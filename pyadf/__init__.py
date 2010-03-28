@@ -361,20 +361,21 @@ def create_empty_adf(adf_filename, diskname='empty', cyl=80, heads=2, sectors=11
         DD floppy; cyl=80, heads=2, sectors=11
         HD floppies have 22 sectors 
     """
-    raise NotImplementedError('not completed yet, adflib appeared to be missing adfCreateDumpDevice')
+    #raise NotImplementedError('not completed yet, adflib appeared to be missing adfCreateDumpDevice')
+    if os.path.exists(adf_filename):
+        raise AdfIOException('%r should not exist!' % adf_filename)
     adf_setup()
-    x = "newdev"
-    flop = adflib.adfCreateDumpDevice(x, cyl, heads, sectors);
+    flop = adflib.adfCreateDumpDevice(adf_filename, cyl, heads, sectors)
     if flop is None:
         print 'adfCreateFlop error', rc
-        raise AdfIOException('%s adfCreateDumpDevice failed' % x)
+        raise AdfIOException('%s adfCreateDumpDevice failed' % adf_filename)
         
     # create the filesystem : OFS with DIRCACHE
     # RETCODE adfCreateFlop(struct Device* dev, char* volName, int volType ) 
-    rc = adflib.adfCreateFlop(flop, diskname, FSMASK_DIRCACHE );
+    rc = adflib.adfCreateFlop(flop, diskname, adflib.FSMASK_DIRCACHE)
     if rc != adflib.RC_OK:
         print 'adfCreateFlop error', rc
-        raise AdfIOException('%s adfCreateFlop failed, %s' % (x, diskname))
+        raise AdfIOException('%s adfCreateFlop failed, %s' % (adf_filename, diskname))
     adflib.adfUnMountDev(flop)
     adf_cleanup()
 

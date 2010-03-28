@@ -42,8 +42,9 @@ class PyadfTest(unittest.TestCase):
         if self.adfobj:
             #del self.adfobj
             self.adfobj.close()
-        # If adfobj has not been destroyed, unlink will fail under Windows (permssion denied. file in use)
-        os.unlink(self.adf_testfilename)
+        if os.path.exists(self.adf_testfilename):
+            # If adfobj has not been destroyed, unlink will fail under Windows (permssion denied. file in use)
+            os.unlink(self.adf_testfilename)
 
     def testMissingOpen(self):
         """Open a missing ADF file"""
@@ -165,7 +166,7 @@ class PyadfTest(unittest.TestCase):
         testfilename = 'juggler_adnim.gif'
         new_tmpfilename = 'tmpfile.tmp'
         adfobj = self.open(mode='w')
-        data = '*' * 901120  # size of a regulat ADF image file so should be way too big
+        data = '*' * 901120  # size of a regular ADF image file so should be way too big
         adfobj.push_file(new_tmpfilename, data)
         adfobj.close()
 
@@ -307,11 +308,40 @@ class PyadfTest(unittest.TestCase):
 
     def testCreateEmptyAdf(self):
         """Create a new ADF file that is empty"""
-        adf_filename = 'newadf.adf'
+        adf_filename = self.adf_testfilename
+        os.unlink(self.adf_testfilename)
         self.failIf(os.path.exists(adf_filename), '%r should not exist!'%adf_filename)
         create_empty_adf(adf_filename)
-        # TODO add checks (files exists, size, try adding to it, etc. check volume name)
-        self.failIf(True)
+        expect_result = []
+        self.list_and_compare(expect_result)
+        # TODO add new test; check volume name)
+
+    def testCreateAlreadyExistsAdf(self):
+        """Attempt to create a new ADF file when file already exists"""
+        adf_filename = self.adf_testfilename
+        self.failIf(not os.path.exists(adf_filename), '%r should exist!'%adf_filename)
+        def do_task():
+            create_empty_adf(adf_filename)
+        self.failUnlessRaises(AdfIOException, do_task)
+        
+    def testCreateAdfPutSmallUnix(self):
+        """create blank adf, put a file into an ADF"""
+        adf_filename = self.adf_testfilename
+        os.unlink(self.adf_testfilename)
+        self.failIf(os.path.exists(adf_filename), '%r should not exist!'%adf_filename)
+        create_empty_adf(adf_filename)
+        testfilename = 'unixtext.txt'
+        new_tmpfilename = 'tmpfile.tmp'
+        adfobj = self.open(mode='w')
+        data = self.get_datafile(testfilename)
+        adfobj.push_file(new_tmpfilename, data)
+        adfobj.close()
+        # check contents
+        self.get_and_compare(testfilename, new_tmpfilename)
+        expect_result = [new_tmpfilename]
+        # check directory listing
+        self.list_and_compare(expect_result)
+
 
 def main(argv=None):
     if argv is None:
